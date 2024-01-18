@@ -1,3 +1,4 @@
+import json
 import subprocess
 import time
 from datetime import date
@@ -6,6 +7,7 @@ import win32com.client
 import win32com.client
 from pywinauto import Application
 from pywinauto_recorder.player import *
+import usaddress
 
 
 class InboundPackageInfo:
@@ -49,11 +51,12 @@ class SapManager:
         app.start(exe_path)
         time.sleep(4)
         win32com.client.GetObject('SAPGUI').GetScriptingEngine.OpenConnection("sap", True)
+        credentials = json.loads(open(r"C:\Users\abu89\PycharmProjects\SAPAutomation\keys\sap.json").read())
         with UIPath(u"SAP||Window"):
             with UIPath(u"||Pane"):
                 time.sleep(1)
-                send_keys("s00013""{TAB}")
-                send_keys("Autel123""{ENTER}")
+                send_keys(credentials["username"]+"{TAB}")
+                send_keys(credentials["password"]+"{ENTER}")
 
     def log_zt01_number(self, package_info):
         with UIPath(u"SAP Easy Access  -  User Menu for Daniel||Window"):
