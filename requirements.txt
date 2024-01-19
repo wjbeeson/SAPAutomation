@@ -1,4 +1,4 @@
-pywinauto
+pywinauto~=0.6.8
 overlay_arrows_and_more==0.5.0
 keyboard
 mouse
@@ -10,6 +10,8 @@ Pillow
 enum34
 cachetools
 thefuzz
-openpyxl
-selenium
+openpyxl~=3.1.2
+selenium~=4.16.0
 pywinauto_recorder
+future~=0.18.3
+usaddress~=0.5.10

@@ -9,11 +9,9 @@ from sap_manager import InboundPackageInfo
 class TemplatePrinter:
 	def __init__(self, src):
 		self.wb = load_workbook(src)
-		# self.ws = self.wb.get_sheet_by_name("Sheet1") # Deprecated
 		self.ws = self.wb["Template"]
 		self.destination = Path(src).parent / "temp.xlsx"
-	
-	# Write the value in the cell defined by row_dest+column_dest
+
 	def write_workbook(self, package_info):
 		package_info: InboundPackageInfo
 		self.ws.sheet_view.showGridLines = False
@@ -44,28 +42,3 @@ class TemplatePrinter:
 	
 	def print_workbook(self):
 		os.startfile(self.destination, 'print')
-	
-
-"""
-package_info = InboundPackageInfo(
-	first_name="First",
-	last_name="Last       t",
-	box_name="Box",
-	street="Street",
-	house_number="First",
-	city="City",
-	state="State",
-	zipcode="Zipcode",
-	date_received="Date",
-	case_number="Case",
-	product_sku="SKU",
-	zt01_number="zt01",
-	vl01n_number="vl01n",
-	notes="Notes Notes Notes Notes Notes Notes Notes NotesNotes  Notes Notes Notes Notes Notes Notes "
-)
-
-printer = TemplatePrinter("C:\\Users\\abu89\\PycharmProjects\\SAPAutomation\\scripts\\assets\\InboundTemplate.xlsx")
-printer.write_workbook(package_info)
-printer.save_workbook()
-printer.print_workbook()
-"""

@@ -1,5 +1,4 @@
 from tkinter import *
-
 from salesforce_autosearch import SalesforceManager
 from sap_manager import SapManager, InboundPackageInfo
 from template_printer import TemplatePrinter
