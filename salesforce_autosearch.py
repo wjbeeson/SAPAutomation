@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import usaddress
 from sap_manager import InboundPackageInfo
 from selenium.webdriver.common.action_chains import ActionChains
+from datetime import datetime
 
 
 class SalesforceManager:
@@ -96,17 +97,25 @@ class SalesforceManager:
     def search_case(self, case_number):
         while True:
             try:
-                self.driver.get(r"https://autelroboticsusa.lightning.force.com/lightning/o/Case/list?filterName=00B4x00000IadxUEAR")
+                self.driver.get(
+                    r"https://autelroboticsusa.lightning.force.com/lightning/o/Case/list?filterName=00B4x00000IadxUEAR")
 
                 # Search the cases
                 WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")))
-                search_input = self.driver.find_elements(By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")[0]
+                    EC.presence_of_element_located(
+                        (By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")))
+                search_input = \
+                self.driver.find_elements(By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")[
+                    0]
                 search_input.send_keys(case_number)
                 search_input.send_keys(Keys.ENTER)
 
                 # Wait until search goes through
+                wait_time = 3
+                time_waited = 0
                 while True:
+                    if time_waited >= wait_time:
+                        break
                     menu_text = self.driver.find_elements(By.XPATH, f"//span[contains(.,'Updated')]//span/..")[0].text
                     results = ""
                     numbers = "0123456789"
@@ -118,30 +127,40 @@ class SalesforceManager:
                     if int(results) < 50:
                         break
                     else:
+                        time_waited += 0.1
                         time.sleep(0.1)
 
                 # Click the top result
                 WebDriverWait(self.driver, 10).until(
                     EC.presence_of_element_located(
                         (By.XPATH, f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")))
-                self.driver.find_elements(By.XPATH, f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")[
+                self.driver.find_elements(By.XPATH,
+                                          f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")[
                     0].click()
                 break
             except Exception:
                 pass
 
     def send_replacement_invoice(self, case_number, material_sku, price):
-        action = ActionChains(self.driver)
         self.search_case(case_number)
-        account_name = "fabianlinda1961@gmail.com" #TODO: Change this to the account name
+        self.driver.find_element(By.TAG_NAME, 'html').send_keys(Keys.END)
+        account_name = self.driver.find_elements(By.XPATH,"(//span[.='Account Information']/../../../div/div/slot"
+                                                          "/records-record-layout-row)[1]//slot//records-record-layout-"
+                                                          "item[@field-label='Account Name']//span[contains(.,'@gmail')"
+                                                          "]")[1].text
         # Click new order button
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//article[@aria-label='Internal Work "
                                                       "Order']//lst-related-list-view-manager//lst-common-list-internal//lst"
                                                       "-list-view-manager-header//div//div//div//div//div//h2//a")))
-        self.driver.find_elements(By.XPATH, "//article[@aria-label='Internal Work "
+        order_button = self.driver.find_elements(By.XPATH, "//article[@aria-label='Internal Work "
                                             "Order']//lst-related-list-view-manager//lst-common-list-internal//lst"
-                                            "-list-view-manager-header//div//div//div//div//div//h2//a")[0].click()
+                                            "-list-view-manager-header//div//div//div//div//div//h2//a")[0]
+        self.driver.find_element(By.TAG_NAME, 'html').send_keys(Keys.HOME)
+        time.sleep(1)
+        order_button.click()
+
+
         # Click new button
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//button[@name='New']")))
@@ -199,16 +218,10 @@ class SalesforceManager:
                                   f"//input[@data-value='{account_name}']/../../../../div["
                                   f"@role='listbox']//ul//li//lightning-base-combobox-item")[0].click()
 
-
         # Click Save Button
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//button[@name='SaveEdit']")))
         self.driver.find_elements(By.XPATH, "//button[@name='SaveEdit']")[0].click()
-
-        # Get the work order number
-        WebDriverWait(self.driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, f"//div[.='Saving quote PDF']")))
-        pass
 
         # Click invoice button
         WebDriverWait(self.driver, 10).until(
@@ -223,15 +236,15 @@ class SalesforceManager:
 
         # Click Overseas Button
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, f"//span[.='Overseas']")))
-        self.driver.find_elements(By.XPATH, f"//span[.='Overseas']")[len(self.driver.find_elements(By.XPATH, f"//span[.='Overseas']"))-1].click()
+        self.driver.find_elements(By.XPATH, f"//span[.='Overseas']")[
+            len(self.driver.find_elements(By.XPATH, f"//span[.='Overseas']")) - 1].click()
 
         # Click Next Button
         WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH,f"//span[.='Next']/..")))
+            EC.presence_of_element_located((By.XPATH, f"//span[.='Next']/..")))
         self.driver.find_elements(By.XPATH, f"//span[.='Next']")[
             len(self.driver.find_elements(By.XPATH, f"//span[.='Next']")) - 1].click()
 
-        self.driver.refresh()
         # Select account name
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search Accounts...']")))
@@ -267,13 +280,55 @@ class SalesforceManager:
         # Click Save Button
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//button[@name='SaveEdit']")))
+        time.sleep(2)
         self.driver.find_elements(By.XPATH, "//button[@name='SaveEdit']")[0].click()
-
-        # Click Add Product Button on main screen
+        time.sleep(2)
         WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[.='Add Product']")))
-        self.driver.find_elements(By.XPATH, f"//button[.='Add Product']")[
-            len(self.driver.find_elements(By.XPATH, f"//button[.='Add Product']")) - 1].click()
+            EC.presence_of_element_located((By.XPATH, "//div[@role='alertdialog']//div//div//div//span//a//div")))
+        def get_active_bar():
+            while True:
+                self.driver.refresh()
+                time.sleep(3)
+                # Check to see if add product is active
+                WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[.='Proforma Invoice']/../../../..//div"
+                                                              "[@class='slds-col slds-no-flex slds-grid slds-"
+                                                              "grid_vertical-align-center horizontal "
+                                                              "actionsContainer']//div//"
+                                                              "runtime_platform_actions-actions-ribbon//ul//li")))
+                result = self.driver.find_elements(By.XPATH, "//div[.='Proforma Invoice']/../../../..//div"
+                                                             "[@class='slds-col slds-no-flex slds-grid slds-"
+                                                             "grid_vertical-align-center horizontal "
+                                                             "actionsContainer']//div//"
+                                                             "runtime_platform_actions-actions-ribbon//ul//li")
+                time.sleep(3)
+                check = self.driver.find_elements(By.XPATH, "//div[.='Proforma Invoice']/../../../..//div"
+                                                             "[@class='slds-col slds-no-flex slds-grid slds-"
+                                                             "grid_vertical-align-center horizontal "
+                                                             "actionsContainer']//div//"
+                                                             "runtime_platform_actions-actions-ribbon//ul//li")
+                if len(check) == len(result):
+                    break
+            return result
+
+        # Check to see if add product button is active
+        active_bar = get_active_bar()
+        if len(active_bar) < 4:
+            # Click Dropdown if not in active bar
+            time.sleep(1)
+            active_bar[len(active_bar) - 1].click()
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//lightning-button-menu[@class='menu-button-item slds-drop"
+                                                          "down-trigger slds-dropdown-trigger_click slds-is-open']")))
+            self.driver.find_elements(By.XPATH,
+                                      "//runtime_platform_actions-action-renderer[@title='Add Product']")[
+                len(self.driver.find_elements(By.XPATH, "//runtime_platform_actions-action-renderer"
+                                                        "[@title='Add Product']"))].click()
+        else:
+            # Click button if in active bar
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, f"(//button[.='Add Product'])[1]")))
+            self.driver.find_elements(By.XPATH, f"//button[.='Add Product']")[len(self.driver.find_elements(By.XPATH, f"//button[.='Add Product']"))-1].click()
 
         # Row is 0 based index. Chooses which material line item to add
         def add_material(current_material, price):
@@ -292,7 +347,7 @@ class SalesforceManager:
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search by Material']")))
             search_box = self.driver.find_elements(By.XPATH, "//input[@placeholder='Search by Material']")[
-                len(self.driver.find_elements(By.XPATH, "//input[@placeholder='Search by Material']"))-1]
+                len(self.driver.find_elements(By.XPATH, "//input[@placeholder='Search by Material']")) - 1]
             search_box.click()
             search_box.send_keys(current_material)
 
@@ -306,8 +361,8 @@ class SalesforceManager:
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, "(//span[.='Material Number']/../../../../../../../tbody/tr)"
                                                           "[1]""//td//lightning-primitive-cell-checkbox")))
-            self.driver.find_elements(By.XPATH,"(//span[.='Material Number']/../../../../../../../tbody/tr)[1]"
-                                               "//td//lightning-primitive-cell-checkbox")[0].click()
+            self.driver.find_elements(By.XPATH, "(//span[.='Material Number']/../../../../../../../tbody/tr)[1]"
+                                                "//td//lightning-primitive-cell-checkbox")[0].click()
 
             # Click the next button
             WebDriverWait(self.driver, 10).until(
@@ -318,7 +373,7 @@ class SalesforceManager:
             # Calculate Price Deduction
             current_price = float(self.driver.find_elements(By.XPATH, f"//lightning-base-formatted-text"
                                                                       f"[.='{current_material}']/../../../../../td")
-                                  [7].text.split(" ")[1].replace(",",""))
+                                  [7].text.split(" ")[1].replace(",", ""))
             discount = current_price - price
 
             # Click the discount field
@@ -337,7 +392,6 @@ class SalesforceManager:
             discount_field.send_keys(discount)
             discount_field.send_keys(Keys.ENTER)
 
-
         add_material(material_sku, price)
         add_material("901030163", 0)  # This is the SKU for 2nd level labor
 
@@ -346,10 +400,49 @@ class SalesforceManager:
             EC.presence_of_element_located((By.XPATH, f"//button[.='Comfirm']")))
         self.driver.find_elements(By.XPATH, f"//button[.='Comfirm']")[0].click()
 
-        # Click "Genreate" Invoice Button *rolls eyes harder*
+
+        # Check to see if payment request button is active
+        active_bar = get_active_bar()
+        active_bar_len = len(active_bar)
+        if active_bar_len < 5:
+            # Click Dropdown if not in active bar
+            time.sleep(1)
+            active_bar[active_bar_len - 1].click()
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//lightning-button-menu[@class='menu-button-item slds-drop"
+                                                          "down-trigger slds-dropdown-trigger_click slds-is-open']")))
+            self.driver.find_elements(By.XPATH,
+                                      "//runtime_platform_actions-action-renderer[@title='Create Payment Request']")[
+                0].click()
+        else:
+            # Click button if in active bar
+            WebDriverWait(self.driver, 10).until(
+                 EC.presence_of_element_located((By.XPATH, f"(//button[.='Create Payment Request'])[1]")))
+            self.driver.find_elements(By.XPATH, f"//button[.='Create Payment Request']")[0].click()
+
+        # Click "Comfirm" button *rolls eyes all the way around*
         WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, f"//button[.='Genreate and Send Quotation']")))
-        self.driver.find_elements(By.XPATH, f"//button[.='Genreate and Send Quotation']")[0].click()
+            EC.presence_of_element_located((By.XPATH, f"//button[.='Comfirm']")))
+        self.driver.find_elements(By.XPATH, f"//button[.='Comfirm']")[0].click()
+
+        # Check to see if generate button is active
+        active_bar = get_active_bar()
+        active_bar_len = len(active_bar)
+        if active_bar_len < 7:
+            # Click Dropdown if not in active bar
+            active_bar[active_bar_len - 1].click()
+            time.sleep(1)
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//lightning-button-menu[@class='menu-button-item slds-drop"
+                                                          "down-trigger slds-dropdown-trigger_click slds-is-open']")))
+            self.driver.find_elements(By.XPATH,
+                                      "//runtime_platform_actions-action-renderer[@title='Genreate "
+                                      "and Send Quotation']")[0].click()
+        else:
+            # Click button if in active bar
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, f"//button[.='Genreate and Send Quotation']")))
+            self.driver.find_elements(By.XPATH, f"//button[.='Genreate and Send Quotation']")[0].click()
 
         # Click "Comfirm" button *rolls eyes all the way around*
         WebDriverWait(self.driver, 10).until(
@@ -359,8 +452,50 @@ class SalesforceManager:
         # Wait until the PDF Saves
         WebDriverWait(self.driver, 30).until(
             EC.presence_of_element_located((By.XPATH, f"//div[.='Saving quote PDF']")))
-        pass
+
+        # Load payment URL by putting it on screen
+        self.driver.find_element(By.TAG_NAME, 'html').send_keys(Keys.END)
+        time.sleep(5)
+
+        # Get Payment Name
+        WebDriverWait(self.driver, 30).until(
+            EC.presence_of_element_located(
+                (By.XPATH, f"//img[@src='https://autelroboticsusa.my.salesforce.com/img/icon/t4v35/custom/"
+                           f"custom48_120.png']/../../../../../../../../../div")))
+        split = self.driver.find_elements(By.XPATH,
+                                                 f"//img[@src='https://autelroboticsusa.my.salesforce.com/img/icon"
+                                                 f"/t4v35/custom/"
+                                                 f"custom48_120.png']/../../../../../../../../../div")[0].text.split(
+            " ")
+        payment_name = ""
+        for text in split:
+            if datetime.today().strftime('%Y-%m-%d') in text:
+                payment_name = text
+
+        # Get Payment URL
+        WebDriverWait(self.driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, f"//span[.='{payment_name}']/../../../../a")))
+        payment_page_url = (self.driver.find_elements(By.XPATH, f"//span[.='{payment_name}']/../../../../a")[0]
+                            .get_attribute("href"))
+
+        self.driver.get(payment_page_url)
+        WebDriverWait(self.driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, f"//span[.='Payment Link']/../../../div/div[@class='slds-"
+                                                      f"form-element__control']//span//slot//records-formula-output//"
+                                                      f"slot//lightning-formatted-text//a")))
+        return self.driver.find_elements(By.XPATH,
+                                         f"//span[.='Payment Link']/../../../div/div[@class='slds-form-element__control']"
+                                         f"//span//slot//records-formula-output//slot//"
+                                         f"lightning-formatted-text//a")[0].get_attribute("href")
+
 
 manager = SalesforceManager()
 manager.login()
-manager.send_replacement_invoice("00057550", "102000722", 700)
+case_number = "00057550"
+nano = manager.send_replacement_invoice(case_number, "102000750", 400)
+lite = manager.send_replacement_invoice(case_number, "102000722", 700)
+manager.search_case(case_number)
+print(f"EVO Nano+ Premium Bundle [$400.00, Normally $719.00]: {nano}")
+print(f"EVO Lite+ Premium Bundle [$700.00, Normally $999.00]: {lite}")
+
+pass
