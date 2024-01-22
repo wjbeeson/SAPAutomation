@@ -19,7 +19,7 @@ class SalesforceManager:
         self.driver.get(url)
 
     def login(self):
-        credentials = json.loads(open(r"C:\Users\abu89\PycharmProjects\SAPAutomation\keys\salesforce.json").read())
+        credentials = json.loads(open(r"keys\salesforce.json").read())
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='username']"))).send_keys(
             credentials["username"])
@@ -59,13 +59,13 @@ class SalesforceManager:
                           "@name='outputField']//lightning-formatted-text")[0].text
             address = usaddress.tag(address)[0]
             house_number = address.get("AddressNumber")
-            street = (f"{address.get("StreetNamePreDirectional", "")} "
-                      f"{address.get("StreetNamePreModifier", "")} "
-                      f"{address.get("StreetNamePreType", "")} "
-                      f"{address.get("StreetName", "")} "
-                      f"{address.get("StreetNamePostDirectional", "")} "
-                      f"{address.get("StreetNamePostModifier", "")} "
-                      f"{address.get("StreetNamePostType", "")}"
+            street = (f'{address.get("StreetNamePreDirectional", "")} '
+                      f'{address.get("StreetNamePreModifier", "")} '
+                      f'{address.get("StreetNamePreType", "")} '
+                      f'{address.get("StreetName", "")} '
+                      f'{address.get("StreetNamePostDirectional", "")} '
+                      f'{address.get("StreetNamePostModifier", "")} '
+                      f'{address.get("StreetNamePostType", "")}'
                       )
             street = ' '.join(street.split())
             city = address.get("PlaceName", "")
@@ -94,36 +94,41 @@ class SalesforceManager:
         return package_info
 
     def search_case(self, case_number):
-        self.driver.get(r"https://autelroboticsusa.lightning.force.com/lightning/o/Case/list?filterName=Recent")
+        while True:
+            try:
+                self.driver.get(r"https://autelroboticsusa.lightning.force.com/lightning/o/Case/list?filterName=00B4x00000IadxUEAR")
 
-        # Select search box
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, f"//button[@aria-label='Search']")))
-        search_box = self.driver.find_elements(By.XPATH, f"//button[@aria-label='Search']")[0]
-        search_box.click()
+                # Search the cases
+                WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")))
+                search_input = self.driver.find_elements(By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")[0]
+                search_input.send_keys(case_number)
+                search_input.send_keys(Keys.ENTER)
 
-        # Select send keys to input box
-        search_input = self.driver.find_elements(By.XPATH, f"//label[.='Search Cases and more']/../div/input")[0]
-        search_input.send_keys(case_number)
+                # Wait until search goes through
+                while True:
+                    menu_text = self.driver.find_elements(By.XPATH, f"//span[contains(.,'Updated')]//span/..")[0].text
+                    results = ""
+                    numbers = "0123456789"
+                    for letter in menu_text:
+                        if letter in numbers:
+                            results = results + letter
+                        else:
+                            break
+                    if int(results) < 50:
+                        break
+                    else:
+                        time.sleep(0.1)
 
-        # Wait for search box to load
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH,
-                                                                             f"//span[contains(text(), "
-                                                                             f"'Show more results for \"')]")))
-
-        # Search
-        search_input.send_keys(Keys.ENTER)
-
-        #Navigate to case window
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//a[@class='scopesItem slds-nav-vertical__action'][@title='Cases']")))
-        self.driver.find_elements(By.XPATH, "//a[@class='scopesItem slds-nav-vertical__action'][@title='Cases']")[
-            0].click()
-
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "(//tbody)[2]//tr//th")))
-        self.driver.find_elements(By.XPATH, "(//tbody)[2]//tr//th")[0].click()
+                # Click the top result
+                WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")))
+                self.driver.find_elements(By.XPATH, f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")[
+                    0].click()
+                break
+            except Exception:
+                pass
 
     def send_replacement_invoice(self, case_number, material_sku, price):
         action = ActionChains(self.driver)
