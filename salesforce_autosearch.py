@@ -16,6 +16,7 @@ class SalesforceManager:
     def __init__(self, url=r"https://login.salesforce.com/"):
         chrome_options = Options()
         chrome_options.add_argument("--disable-notifications")
+        #chrome_options.add_argument('--headless=new')
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get(url)
 
@@ -94,114 +95,53 @@ class SalesforceManager:
         )
         return package_info
 
+    def execute_on_web_element(self, xpath, action, index=-1):
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, xpath)))
+        if index == -1:
+            index = len(self.driver.find_elements(By.XPATH, xpath)) - 1
+        element = self.driver.find_elements(By.XPATH, xpath)[index]
+        return action(element)
     def search_case(self, case_number):
-        while True:
-            try:
-                self.driver.get(
-                    r"https://autelroboticsusa.lightning.force.com/lightning/o/Case/list?filterName=00B4x00000IadxUEAR")
+        self.driver.get(f"https://autelroboticsusa.my.salesforce.com/_ui/search/ui/UnifiedSearchResults?str={case_number}#!/fen=500&initialViewMode=detail&str={case_number}")
+        id = self.execute_on_web_element("(//div[@class='pbBody']//tr)[2]//th//a", lambda f: f.get_attribute("data-seclki"))
+        self.driver.get(f"https://autelroboticsusa.lightning.force.com/lightning/r/Case/{id}/view")
 
-                # Search the cases
-                WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located(
-                        (By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")))
-                search_input = \
-                self.driver.find_elements(By.XPATH, f"//input[@aria-label='Search 西安全部未处理北美个案 list view.']")[
-                    0]
-                search_input.send_keys(case_number)
-                search_input.send_keys(Keys.ENTER)
-
-                # Wait until search goes through
-                wait_time = 3
-                time_waited = 0
-                while True:
-                    if time_waited >= wait_time:
-                        break
-                    menu_text = self.driver.find_elements(By.XPATH, f"//span[contains(.,'Updated')]//span/..")[0].text
-                    results = ""
-                    numbers = "0123456789"
-                    for letter in menu_text:
-                        if letter in numbers:
-                            results = results + letter
-                        else:
-                            break
-                    if int(results) < 50:
-                        break
-                    else:
-                        time_waited += 0.1
-                        time.sleep(0.1)
-
-                # Click the top result
-                WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located(
-                        (By.XPATH, f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")))
-                self.driver.find_elements(By.XPATH,
-                                          f"((//span[.='邮件状态']/../../../../../../../table/tbody/tr)[1]/th)[1]")[
-                    0].click()
-                break
-            except Exception:
-                pass
 
     def send_replacement_invoice(self, case_number, material_sku, price):
         self.search_case(case_number)
-        self.driver.find_element(By.TAG_NAME, 'html').send_keys(Keys.END)
-        account_name = self.driver.find_elements(By.XPATH,"(//span[.='Account Information']/../../../div/div/slot"
-                                                          "/records-record-layout-row)[1]//slot//records-record-layout-"
-                                                          "item[@field-label='Account Name']//span[contains(.,'@gmail')"
-                                                          "]")[1].text
-        # Click new order button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//article[@aria-label='Internal Work "
-                                                      "Order']//lst-related-list-view-manager//lst-common-list-internal//lst"
-                                                      "-list-view-manager-header//div//div//div//div//div//h2//a")))
-        order_button = self.driver.find_elements(By.XPATH, "//article[@aria-label='Internal Work "
-                                            "Order']//lst-related-list-view-manager//lst-common-list-internal//lst"
-                                            "-list-view-manager-header//div//div//div//div//div//h2//a")[0]
-        self.driver.find_element(By.TAG_NAME, 'html').send_keys(Keys.HOME)
+        self.execute_on_web_element('html', lambda f: f.send_keys(Keys.END))
         time.sleep(1)
-        order_button.click()
+        self.execute_on_web_element('html', lambda f: f.send_keys(Keys.HOME))
+        account_name = self.execute_on_web_element("((//span[.='Account Information']/../../../div/div/slot"
+                                                   "/records-record-layout-row)[1]//slot//records-record-layout-"
+                                                   "item[@field-label='Account Name']//span[contains(.,'@gmail')"
+                                                   "])[2]", lambda f: f.text)
 
+        # Click new order button
+        self.execute_on_web_element("//article[@aria-label='Internal Work Order']//lst-related-list-view-"
+                                    "manager//lst-common-list-internal//lst-list-view-manager-header//div//div//"
+                                    "div//div//div//h2//a", lambda f: f.click())
 
         # Click new button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@name='New']")))
-        self.driver.find_elements(By.XPATH, "//button[@name='New']")[0].click()
+        self.execute_on_web_element("//button[@name='New']", lambda f: f.click())
 
         # Click Replacement Button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//label[@class='slds-radio topdown-radio-container slds-clearfix']")))
-        self.driver.find_elements(By.XPATH,
-                                  "(//label[@class='slds-radio topdown-radio-container slds-clearfix'])[7]//span")[
-            0].click()
+        self.execute_on_web_element("(//label[@class='slds-radio topdown-radio-container slds-clearfix'])[7]//span"
+                                    , lambda f: f.click())
 
         # Click Next Button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//div[@class='inlineFooter']//button")))
-        self.driver.find_elements(By.XPATH, "//div[@class='inlineFooter']//button")[1].click()
+        self.execute_on_web_element("//div[@class='inlineFooter']//button", lambda f: f.click(), 1)
 
         # Select Current Step
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Current step, --None--']")))
-        self.driver.find_elements(By.XPATH, "//button[@aria-label='Current step, --None--']")[0].click()
-
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Current step, --None--']/../..//div["
-                                                      "@role='listbox']//lightning-base-combobox-item")))
-        self.driver.find_elements(By.XPATH,
-                                  "//button[@aria-label='Current step, --None--']/../..//div["
-                                  "@role='listbox']//lightning-base-combobox-item")[2].click()
+        self.execute_on_web_element("//button[@aria-label='Current step, --None--']", lambda f: f.click())
+        self.execute_on_web_element("//button[@aria-label='Current step, --None--']/../..//div[@role='listbox']//"
+                                    "lightning-base-combobox-item", lambda f: f.click(),2)
 
         # Select Region
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Region, --None--']")))
-        self.driver.find_elements(By.XPATH, "//button[@aria-label='Region, --None--']")[0].click()
-
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Region, --None--']/../..//div["
-                                                      "@role='listbox']//lightning-base-combobox-item")))
-        self.driver.find_elements(By.XPATH,
-                                  "//button[@aria-label='Region, --None--']/../..//div["
-                                  "@role='listbox']//lightning-base-combobox-item")[2].click()
+        self.execute_on_web_element("//button[@aria-label='Region, --None--']", lambda f: f.click())
+        self.execute_on_web_element("//button[@aria-label='Region, --None--']/../..//div["
+                                    "@role='listbox']//lightning-base-combobox-item", lambda f: f.click(), 2)
 
         # Select account name
         WebDriverWait(self.driver, 10).until(
@@ -219,31 +159,19 @@ class SalesforceManager:
                                   f"@role='listbox']//ul//li//lightning-base-combobox-item")[0].click()
 
         # Click Save Button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@name='SaveEdit']")))
-        self.driver.find_elements(By.XPATH, "//button[@name='SaveEdit']")[0].click()
+        self.execute_on_web_element("//button[@name='SaveEdit']", lambda f: f.click())
 
         # Click invoice button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//span[@title='Proforma Invoice']/..")))
-        self.driver.find_elements(By.XPATH, "//span[@title='Proforma Invoice']/..")[0].click()
+        self.execute_on_web_element("//span[@title='Proforma Invoice']/..", lambda f: f.click())
 
         # Click new button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@name='New']")))
-        self.driver.find_elements(By.XPATH, "//button[@name='New']")[
-            len(self.driver.find_elements(By.XPATH, "//button[@name='New']")) - 1].click()
+        self.execute_on_web_element("(//button[@name='New'])[2]", lambda f: f.click())
 
         # Click Overseas Button
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, f"//span[.='Overseas']")))
-        self.driver.find_elements(By.XPATH, f"//span[.='Overseas']")[
-            len(self.driver.find_elements(By.XPATH, f"//span[.='Overseas']")) - 1].click()
+        self.execute_on_web_element(f"//span[.='Overseas']", lambda f: f.click())
 
         # Click Next Button
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, f"//span[.='Next']/..")))
-        self.driver.find_elements(By.XPATH, f"//span[.='Next']")[
-            len(self.driver.find_elements(By.XPATH, f"//span[.='Next']")) - 1].click()
+        self.execute_on_web_element(f"//span[.='Next']/..", lambda f: f.click())
 
         # Select account name
         WebDriverWait(self.driver, 10).until(
@@ -493,9 +421,8 @@ manager = SalesforceManager()
 manager.login()
 case_number = "00057550"
 nano = manager.send_replacement_invoice(case_number, "102000750", 400)
-lite = manager.send_replacement_invoice(case_number, "102000722", 700)
+lite = manager.send_replacement_invoice(case_number, "102000722", 800)
 manager.search_case(case_number)
 print(f"EVO Nano+ Premium Bundle [$400.00, Normally $719.00]: {nano}")
-print(f"EVO Lite+ Premium Bundle [$700.00, Normally $999.00]: {lite}")
-
-pass
+print(f"EVO Lite+ Premium Bundle [$800.00, Normally $999.00]: {lite}")
+input()
