@@ -83,6 +83,8 @@ class InboundPackageForm:
                                                                                                         column=0,
                                                                                                         columnspan=4,
                                                                                                         sticky=W + E)
+        #Button(base, text='Send Email', bg='white', fg='brown', command=self.send_email).grid(row=14, column=3,
+        #                                                                                      sticky=W + E)
         # Process Logger
         Label(base, text=f"ZT01 Number", font=("bold", 10)).grid(row=16)
         self.zt01_number = Entry(base)
@@ -91,7 +93,6 @@ class InboundPackageForm:
         Label(base, text=f"VL01N Number", font=("bold", 10)).grid(row=18)
         self.vl01n_number = Entry(base)
         self.vl01n_number.grid(row=18, column=1)
-
 
         Button(base, text='Print Form', bg='brown', fg='white', command=self.print_form).grid(row=19, column=0,
                                                                                               columnspan=3,
@@ -123,6 +124,10 @@ class InboundPackageForm:
         self.zt01_number.delete(0, END)
         self.vl01n_number.delete(0, END)
         self.error_text.config(text="")
+
+    def send_email(self):
+        self.format_form()
+        self.sf_manager.send_confirmation_email(self.case_number.get())
 
     def search_case(self):
         self.sf_manager.search_case(self.case_number.get())
@@ -166,6 +171,7 @@ class InboundPackageForm:
 
         # Print Form
         self.print_form()
+        self.send_email()
 
     def format_form(self):
         package_info = self.get_package_info()
@@ -209,6 +215,7 @@ class InboundPackageForm:
             if value is not None:
                 element.delete(0, END)
                 element.insert(0, value)
+
         set_form_element(self.first_name, package_info.first_name)
         set_form_element(self.last_name, package_info.last_name)
         set_form_element(self.box_name, package_info.box_name)

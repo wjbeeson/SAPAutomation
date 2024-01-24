@@ -1,0 +1,12 @@
+Hello {name},
+
+This email is regarding Case Number {case_number}.
+
+The repair center has received your package and will prepare a repair estimate for it in the order it was received. The next step will be us reaching out to you to confirm the cost of the repairs if applicable.
+
+If you purchased Autel Care and registered it with the serial number of your drone upon purchase and have not informed us already, please respond to this email with your Autel Care number so that we can prepare an accurate estimate.
+
+Thank you for your patience.
+
+Best Regards,
+After-sales Technical Support
