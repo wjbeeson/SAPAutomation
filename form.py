@@ -2,18 +2,11 @@ from tkinter import *
 from salesforce_autosearch import SalesforceManager
 from sap_manager import SapManager, InboundPackageInfo
 from template_printer import TemplatePrinter
+from datetime import datetime
 
 
 class InboundPackageForm:
     def __init__(self):
-        self.logged_zt01_number = False
-        self.recorded_zt01_number = False
-        self.logged_vl01n_number = False
-        self.recorded_vl01n_number = False
-        self.zt01_number = ""
-        self.vl01n_number = ""
-        self.package_info = None
-
         sap_manager = SapManager()
         sap_manager.login()
         self.sap_manager = sap_manager
@@ -40,6 +33,8 @@ class InboundPackageForm:
         Label(base, text="Date Received", font=("bold", 10)).grid(row=2, column=2)
         self.date_received = Entry(base)
         self.date_received.grid(row=2, column=3)
+        time = datetime.now().strftime("%m/%d")
+        self.date_received.insert(0, time)
 
         # Customer Information
         Label(base, text="Customer Information", font=("bold", 15)).grid(row=3, column=0, columnspan=3, sticky=W)
@@ -89,31 +84,33 @@ class InboundPackageForm:
                                                                                                         columnspan=4,
                                                                                                         sticky=W + E)
         # Process Logger
-        self.step_1 = Label(base, text=f"1. Log ZT01 Number", font=("bold", 10))
-        self.step_1.grid(row=15, column=0, columnspan=4, sticky=W)
+        Label(base, text=f"ZT01 Number", font=("bold", 10)).grid(row=16)
+        self.zt01_number = Entry(base)
+        self.zt01_number.grid(row=16, column=1)
 
-        self.step_2 = Label(base, text=f"2. Record ZT01 Number", font=("bold", 10))
-        self.step_2.grid(row=16, column=0, columnspan=4, sticky=W)
+        Label(base, text=f"VL01N Number", font=("bold", 10)).grid(row=18)
+        self.vl01n_number = Entry(base)
+        self.vl01n_number.grid(row=18, column=1)
 
-        self.step_3 = Label(base, text=f"3. Log VL01N Number", font=("bold", 10))
-        self.step_3.grid(row=17, column=0, columnspan=4, sticky=W)
-
-        self.step_4 = Label(base, text=f"4. Record VL01N Number", font=("bold", 10))
-        self.step_4.grid(row=18, column=0, columnspan=4, sticky=W)
 
         Button(base, text='Print Form', bg='brown', fg='white', command=self.print_form).grid(row=19, column=0,
                                                                                               columnspan=3,
                                                                                               sticky=W + E)
-        Button(base, text='Clear', bg='white', fg='brown', command=self.delete_contents).grid(row=19, column=3,
-                                                                                              sticky=W + E)
+        Button(base, text='Clear', bg='white', fg='brown', command=self.reset_form).grid(row=19, column=3,
+                                                                                         sticky=W + E)
+
+        self.error_text = Label(base, text=f"", font=("bold", 10), foreground="red")
+        self.error_text.grid(row=100, column=0, columnspan=4, sticky=W + E)
         # it will be used for displaying the registration form onto the window
         self.base = base
         base.mainloop()
 
-    def delete_contents(self):
+    def reset_form(self):
         self.case_number.delete(0, END)
         self.product_sku.delete(0, END)
+        time = datetime.now().strftime("%m/%d")
         self.date_received.delete(0, END)
+        self.date_received.insert(0, time)
         self.first_name.delete(0, END)
         self.last_name.delete(0, END)
         self.box_name.delete(0, END)
@@ -123,40 +120,58 @@ class InboundPackageForm:
         self.state.delete(0, END)
         self.zipcode.delete(0, END)
         self.notes.delete(0, END)
-        self.step_1.config(text=f"1. Log ZT01 Number")
-        self.step_2.config(text=f"2. Record ZT01 Number")
-        self.step_3.config(text=f"3. Log VL01N Number")
-        self.step_4.config(text=f"4. Record VL01N Number")
-        self.logged_zt01_number = False
-        self.recorded_zt01_number = False
-        self.logged_vl01n_number = False
-        self.recorded_vl01n_number = False
+        self.zt01_number.delete(0, END)
+        self.vl01n_number.delete(0, END)
+        self.error_text.config(text="")
 
     def search_case(self):
         self.sf_manager.search_case(self.case_number.get())
         package_info = self.sf_manager.extract_case_info()
-        self.first_name.delete(0, END)
-        self.first_name.insert(0, package_info.first_name)
+        self.set_package_info(package_info)
+        self.format_form()
 
-        self.last_name.delete(0, END)
-        self.last_name.insert(0, package_info.last_name)
-
-        self.house_number.delete(0, END)
-        self.house_number.insert(0, package_info.house_number)
-
-        self.street.delete(0, END)
-        self.street.insert(0, package_info.street)
-
-        self.city.delete(0, END)
-        self.city.insert(0, package_info.city)
-
-        self.state.delete(0, END)
-        self.state.insert(0, package_info.state)
-
-        self.zipcode.delete(0, END)
-        self.zipcode.insert(0, package_info.zipcode)
+    def validate_form(self, package_info: InboundPackageInfo):
+        self.error_text.config(text="")
+        if package_info.case_number == "":
+            self.error_text.config(text="Case Number is required")
+            return False
+        if package_info.product_sku == "":
+            self.error_text.config(text="Product SKU is required")
+            return False
+        if len(package_info.state) != 2:
+            self.error_text.config(text="State must be two characters")
+            return False
+        return True
 
     def receive_package(self):
+        package_info = self.get_package_info()
+
+        if not self.validate_form(package_info):
+            return
+        # Generate zt01 Number
+        self.sap_manager.log_zt01_number(package_info)
+
+        # Get zt01 Number
+        zt01_number = self.sap_manager.record_zt01_number(package_info.case_number)
+        self.zt01_number.delete(0, END)
+        self.zt01_number.insert(0, zt01_number)
+
+        # Generate vl01n Number
+        self.sap_manager.log_vl01n_number(zt01_number)
+
+        # Get vl01n Number
+        vl01n_number = self.sap_manager.record_vl01n_number(zt01_number)
+        self.vl01n_number.delete(0, END)
+        self.vl01n_number.insert(0, vl01n_number)
+
+        # Print Form
+        self.print_form()
+
+    def format_form(self):
+        package_info = self.get_package_info()
+        self.set_package_info(package_info)
+
+    def get_package_info(self):
         case_number = self.case_number.get()
         if len(case_number) != 8:
             preceding_zeros = ""
@@ -166,67 +181,53 @@ class InboundPackageForm:
         else:
             case_number = self.case_number.get()
 
-        if self.box_name.get() == "":
-            box_name = self.first_name.get() + " " + self.last_name.get()
+        if self.box_name.get() == "" or self.box_name.get() == " ":
+            box_name = self.first_name.get().title() + " " + self.last_name.get().title()
         else:
             box_name = self.box_name.get()
 
-        self.package_info = InboundPackageInfo(
-            first_name=self.first_name.get(),
-            last_name=self.last_name.get(),
+        package_info = InboundPackageInfo(
+            first_name=self.first_name.get().title(),
+            last_name=self.last_name.get().title(),
             box_name=box_name,
-            street=self.street.get(),
+            street=self.street.get().title(),
             house_number=self.house_number.get(),
-            city=self.city.get(),
-            state=self.state.get(),
+            city=self.city.get().title(),
+            state=self.state.get().upper().replace(".", ""),
             zipcode=self.zipcode.get(),
             date_received=self.date_received.get(),
             case_number=case_number,
             product_sku=self.product_sku.get(),
-            zt01_number=self.zt01_number,
-            vl01n_number=self.vl01n_number,
-            notes=self.notes.get()
+            zt01_number=self.zt01_number.get(),
+            vl01n_number=self.vl01n_number.get(),
+            notes=self.notes.get().lower()
         )
-        if not self.logged_zt01_number:
-            try:
-                self.sap_manager.log_zt01_number(self.package_info)
-                self.logged_zt01_number = True
-                self.step_1.config(text=f"1. Log ZT01 Number: Done")
-            except Exception:
-                pass
+        return package_info
 
-        if not self.recorded_zt01_number:
-            try:
-                self.zt01_number = self.sap_manager.record_zt01_number(self.package_info.case_number)
-                self.package_info.zt01_number = self.zt01_number
-                print("zt01_number: " + self.zt01_number)
-                self.recorded_zt01_number = True
-                self.step_2.config(text=f"2. Record ZT01 Number: {self.zt01_number}")
-            except Exception:
-                pass
+    def set_package_info(self, package_info: InboundPackageInfo):
+        def set_form_element(element, value):
+            if value is not None:
+                element.delete(0, END)
+                element.insert(0, value)
+        set_form_element(self.first_name, package_info.first_name)
+        set_form_element(self.last_name, package_info.last_name)
+        set_form_element(self.box_name, package_info.box_name)
+        set_form_element(self.street, package_info.street)
+        set_form_element(self.house_number, package_info.house_number)
+        set_form_element(self.city, package_info.city)
+        set_form_element(self.state, package_info.state)
 
-        if not self.logged_vl01n_number:
-            try:
-                self.sap_manager.log_vl01n_number(self.zt01_number)
-                self.logged_vl01n_number = True
-                self.step_3.config(text=f"3. Log VL01N Number: Done")
-            except Exception:
-                pass
-
-        if not self.recorded_vl01n_number:
-            try:
-                self.vl01n_number = self.sap_manager.record_vl01n_number(self.zt01_number)
-                self.package_info.vl01n_number = self.vl01n_number
-                print("vl01_number: " + self.vl01n_number)
-                self.recorded_vl01n_number = True
-                self.step_4.config(text=f"4. Record VL01N Number: {self.vl01n_number}")
-                self.print_form()
-            except Exception:
-                pass
+        set_form_element(self.zipcode, package_info.zipcode)
+        set_form_element(self.date_received, package_info.date_received)
+        set_form_element(self.case_number, package_info.case_number)
+        set_form_element(self.product_sku, package_info.product_sku)
+        set_form_element(self.zt01_number, package_info.zt01_number)
+        set_form_element(self.vl01n_number, package_info.vl01n_number)
+        set_form_element(self.notes, package_info.notes)
 
     def print_form(self):
         template_path = r"assets/InboundTemplate.xlsx"
         printer = TemplatePrinter(template_path)
-        printer.write_workbook(self.package_info)
+        printer.write_workbook(self.get_package_info())
         printer.save_workbook()
         printer.print_workbook()

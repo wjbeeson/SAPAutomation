@@ -11,8 +11,9 @@ import usaddress
 
 
 class InboundPackageInfo:
-    def __init__(self, first_name, last_name, street, house_number, city, state, zipcode, case_number, product_sku,
-                 box_name, date_received, zt01_number, vl01n_number, notes):
+    def __init__(self, first_name=None, last_name=None, street=None, house_number=None, city=None, state=None,
+                 zipcode=None, case_number=None, product_sku=None, box_name=None, date_received=None, zt01_number=None,
+                 vl01n_number=None, notes=None):
         self.first_name = first_name
         self.last_name = last_name
         self.street = street
@@ -55,8 +56,8 @@ class SapManager:
         with UIPath(u"SAP||Window"):
             with UIPath(u"||Pane"):
                 time.sleep(1)
-                send_keys(credentials["username"]+"{TAB}")
-                send_keys(credentials["password"]+"{ENTER}")
+                send_keys(credentials["username"] + "{TAB}")
+                send_keys(credentials["password"] + "{ENTER}")
 
     def log_zt01_number(self, package_info):
         with UIPath(u"SAP Easy Access  -  User Menu for Daniel||Window"):

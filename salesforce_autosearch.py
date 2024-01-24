@@ -80,18 +80,11 @@ class SalesforceManager:
         package_info = InboundPackageInfo(
             first_name=first_name,
             last_name=last_name,
-            box_name="",
             street=street,
             house_number=house_number,
             city=city,
             state=state,
             zipcode=zipcode,
-            date_received="",
-            case_number="",
-            product_sku="",
-            zt01_number="",
-            vl01n_number="",
-            notes=""
         )
         return package_info
 
@@ -417,12 +410,12 @@ class SalesforceManager:
                                          f"lightning-formatted-text//a")[0].get_attribute("href")
 
 
-manager = SalesforceManager()
-manager.login()
-case_number = "00057550"
-nano = manager.send_replacement_invoice(case_number, "102000750", 400)
-lite = manager.send_replacement_invoice(case_number, "102000722", 800)
-manager.search_case(case_number)
-print(f"EVO Nano+ Premium Bundle [$400.00, Normally $719.00]: {nano}")
-print(f"EVO Lite+ Premium Bundle [$800.00, Normally $999.00]: {lite}")
-input()
+#manager = SalesforceManager()
+#manager.login()
+#case_number = "00057550"
+#nano = manager.send_replacement_invoice(case_number, "102000750", 400)
+#lite = manager.send_replacement_invoice(case_number, "102000722", 800)
+#manager.search_case(case_number)
+#print(f"EVO Nano+ Premium Bundle [$400.00, Normally $719.00]: {nano}")
+#print(f"EVO Lite+ Premium Bundle [$800.00, Normally $999.00]: {lite}")
+#input()
