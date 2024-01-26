@@ -1,13 +1,15 @@
 import os
 from pathlib import Path
-
+import win32print
+from win32api import ShellExecute
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
 from sap_manager import InboundPackageInfo
 
 
-class TemplatePrinter:
-	def __init__(self, src):
+class InboundFormPrinter:
+	def __init__(self):
+		src = r"assets/InboundTemplate.xlsx"
 		self.wb = load_workbook(src)
 		self.ws = self.wb["Template"]
 		self.destination = Path(src).parent / "temp.xlsx"
@@ -41,4 +43,5 @@ class TemplatePrinter:
 		self.wb.save(self.destination)
 	
 	def print_workbook(self):
-		os.startfile(self.destination, 'print')
+		printer_name = 'WF-7710 Series(Network)'
+		ShellExecute(0, "printto", str(self.destination), f'"{printer_name}"', ".", 0)

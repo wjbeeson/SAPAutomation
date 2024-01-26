@@ -1,12 +1,24 @@
 from tkinter import *
-from salesforce_autosearch import SalesforceManager
-from sap_manager import SapManager, InboundPackageInfo
-from template_printer import TemplatePrinter
-from datetime import datetime
+import form_utilities
+from inbound_form_printer import InboundFormPrinter
+from inbound_label_printer import InboundLabelPrinter
+from salesforce import *
+from sap_manager import SapManager
+from form_menu_bar import add_menu_bar
 
 
 class InboundPackageForm:
-    def __init__(self):
+    def __init__(self, package_info: InboundPackageInfo = InboundPackageInfo()):
+        # Start Driver
+        chrome_options = Options()
+        chrome_options.add_argument("--disable-notifications")
+        # chrome_options.add_argument('--headless=new')
+        self.driver = webdriver.Chrome(options=chrome_options)
+
+        for method in filter(callable, form_utilities.__dict__.values()):
+            setattr(self, method.__name__, method)
+        add_menu_bar(self, 0)
+
         sap_manager = SapManager()
         sap_manager.login()
         self.sap_manager = sap_manager
@@ -83,8 +95,6 @@ class InboundPackageForm:
                                                                                                         column=0,
                                                                                                         columnspan=4,
                                                                                                         sticky=W + E)
-        #Button(base, text='Send Email', bg='white', fg='brown', command=self.send_email).grid(row=14, column=3,
-        #                                                                                      sticky=W + E)
         # Process Logger
         Label(base, text=f"ZT01 Number", font=("bold", 10)).grid(row=16)
         self.zt01_number = Entry(base)
@@ -99,12 +109,22 @@ class InboundPackageForm:
                                                                                               sticky=W + E)
         Button(base, text='Clear', bg='white', fg='brown', command=self.reset_form).grid(row=19, column=3,
                                                                                          sticky=W + E)
+        Button(base, text='Print Label', bg='brown', fg='white', command=self.print_label).grid(row=20, column=0,
+                                                                                                columnspan=3,
+                                                                                                sticky=W + E)
+        Button(base, text='Send Nano/Lite Email', bg='brown', fg='white', pady=35,
+               command=self.send_nano_lite_replacement_email).grid(row=21, column=0,
+                                                                   columnspan=4, sticky=E)
 
         self.error_text = Label(base, text=f"", font=("bold", 10), foreground="red")
         self.error_text.grid(row=100, column=0, columnspan=4, sticky=W + E)
         # it will be used for displaying the registration form onto the window
         self.base = base
         base.mainloop()
+
+    def send_nano_lite_replacement_email(self):
+        self.format_form()
+        self.sf_manager.send_nano_lite_replacement_email(self.case_number.get())
 
     def reset_form(self):
         self.case_number.delete(0, END)
@@ -153,6 +173,10 @@ class InboundPackageForm:
 
         if not self.validate_form(package_info):
             return
+
+        # Print Label
+        self.print_label()
+
         # Generate zt01 Number
         self.sap_manager.log_zt01_number(package_info)
 
@@ -177,64 +201,16 @@ class InboundPackageForm:
         package_info = self.get_package_info()
         self.set_package_info(package_info)
 
-    def get_package_info(self):
-        case_number = self.case_number.get()
-        if len(case_number) != 8:
-            preceding_zeros = ""
-            for i in range(8 - len(case_number)):
-                preceding_zeros += "0"
-            case_number = preceding_zeros + case_number
-        else:
-            case_number = self.case_number.get()
-
-        if self.box_name.get() == "" or self.box_name.get() == " ":
-            box_name = self.first_name.get().title() + " " + self.last_name.get().title()
-        else:
-            box_name = self.box_name.get()
-
-        package_info = InboundPackageInfo(
-            first_name=self.first_name.get().title(),
-            last_name=self.last_name.get().title(),
-            box_name=box_name,
-            street=self.street.get().title(),
-            house_number=self.house_number.get(),
-            city=self.city.get().title(),
-            state=self.state.get().upper().replace(".", ""),
-            zipcode=self.zipcode.get(),
-            date_received=self.date_received.get(),
-            case_number=case_number,
-            product_sku=self.product_sku.get(),
-            zt01_number=self.zt01_number.get(),
-            vl01n_number=self.vl01n_number.get(),
-            notes=self.notes.get().lower()
-        )
-        return package_info
-
-    def set_package_info(self, package_info: InboundPackageInfo):
-        def set_form_element(element, value):
-            if value is not None:
-                element.delete(0, END)
-                element.insert(0, value)
-
-        set_form_element(self.first_name, package_info.first_name)
-        set_form_element(self.last_name, package_info.last_name)
-        set_form_element(self.box_name, package_info.box_name)
-        set_form_element(self.street, package_info.street)
-        set_form_element(self.house_number, package_info.house_number)
-        set_form_element(self.city, package_info.city)
-        set_form_element(self.state, package_info.state)
-
-        set_form_element(self.zipcode, package_info.zipcode)
-        set_form_element(self.date_received, package_info.date_received)
-        set_form_element(self.case_number, package_info.case_number)
-        set_form_element(self.product_sku, package_info.product_sku)
-        set_form_element(self.zt01_number, package_info.zt01_number)
-        set_form_element(self.vl01n_number, package_info.vl01n_number)
-        set_form_element(self.notes, package_info.notes)
-
     def print_form(self):
-        template_path = r"assets/InboundTemplate.xlsx"
-        printer = TemplatePrinter(template_path)
+        printer = InboundFormPrinter()
         printer.write_workbook(self.get_package_info())
         printer.save_workbook()
         printer.print_workbook()
+
+    def print_label(self):
+        printer = InboundLabelPrinter()
+        printer.write_workbook(self.get_package_info())
+        printer.save_workbook()
+        printer.print_workbook()
+
+InboundPackageForm()
