@@ -19,6 +19,7 @@ def switch_to_form(self, form_name):
         "REPAIR": repair_form.RepairForm,
     }
     driver = self.driver
+    sap_manager = self.sap_manager
     package_info = self.get_package_info()
     self.base.destroy()
-    form_dict[form_name](driver, package_info)
+    form_dict[form_name](driver, sap_manager, package_info)

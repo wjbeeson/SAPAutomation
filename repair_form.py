@@ -3,12 +3,19 @@ from package_info import PackageInfo
 from salesforce import *
 from form_parts import add_menu_bar
 from form_base import FormBase
+from sap_manager import SapManager
 
 
 class RepairForm(FormBase):
-    def __init__(self, driver=None, package_info: PackageInfo = PackageInfo()):
+    def __init__(self, driver=None, sap_manager=None, package_info: PackageInfo = PackageInfo()):
         super().__init__()
         self.driver = driver
+        self.sap_manager = sap_manager
+        if sap_manager is None:
+            sap_manager = SapManager()
+            sap_manager.login()
+            self.sap_manager = sap_manager
+
         if driver is None:
             # Start Driver
             chrome_options = Options()
@@ -16,10 +23,6 @@ class RepairForm(FormBase):
             # chrome_options.add_argument('--headless=new')
             self.driver = webdriver.Chrome(options=chrome_options)
             login(self.driver)
-
-        # sap_manager = SapManager()
-        # sap_manager.login()
-        # self.sap_manager = sap_manager
 
         self.base = Tk()
         self.base.geometry('500x500')

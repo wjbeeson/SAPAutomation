@@ -9,14 +9,16 @@ from form_base import FormBase
 
 
 class ReceiveForm(FormBase):
-    def __init__(self, driver=None, package_info: PackageInfo = PackageInfo()):
+    def __init__(self, driver=None, sap_manager=None, package_info: PackageInfo = PackageInfo()):
         super().__init__()
         self.driver = driver
-        if driver is None:
+        self.sap_manager = sap_manager
+        if sap_manager is None:
             sap_manager = SapManager()
             sap_manager.login()
             self.sap_manager = sap_manager
 
+        if driver is None:
             # Start Driver
             chrome_options = Options()
             chrome_options.add_argument("--disable-notifications")
