@@ -5,7 +5,7 @@ from win32api import ShellExecute
 import win32print
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
-from sap_manager import InboundPackageInfo
+from utilities import PackageInfo
 
 
 class InboundLabelPrinter:
@@ -31,21 +31,21 @@ class InboundLabelPrinter:
 		return name_cell
 
 	def write_workbook(self, package_info):
-		package_info: InboundPackageInfo
+		package_info: PackageInfo
 		model_name = self.get_model_name(package_info.product_sku)
 
 		self.ws.sheet_view.showGridLines = False
 		self.ws["A1"] = package_info.case_number
-		self.ws["A1"].font = Font(size=30, italic=False)
+		self.ws["A1"].font = Font(name='Arial Nova Cond', size=36, italic=False)
 		
 		self.ws["A3"] = (package_info.first_name + " " + package_info.last_name)
-		self.ws["A3"].font = Font(size=30, italic=False)
+		self.ws["A3"].font = Font(name='Arial Nova Cond', size=36, italic=False)
 		
 		self.ws["A5"] = model_name
-		self.ws["A5"].font = Font(size=30, italic=False)
+		self.ws["A5"].font = Font(name='Arial Nova Cond', size=36, italic=False)
 		
 		self.ws["A7"] = package_info.date_received
-		self.ws["A7"].font = Font(size=30, italic=False)
+		self.ws["A7"].font = Font(name='Arial Nova Cond', size=36, italic=False)
 
 	
 	def save_workbook(self):
@@ -53,4 +53,5 @@ class InboundLabelPrinter:
 	
 	def print_workbook(self):
 		printer_name = 'Brother QL-720NW'
+		self.ws.sheet_properties.pageSetUpPr.fitToPage = True
 		ShellExecute(0, "printto", str(self.destination), f'"{printer_name}"', ".", 0)

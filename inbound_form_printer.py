@@ -4,7 +4,7 @@ import win32print
 from win32api import ShellExecute
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
-from sap_manager import InboundPackageInfo
+from utilities import PackageInfo
 
 
 class InboundFormPrinter:
@@ -15,7 +15,7 @@ class InboundFormPrinter:
 		self.destination = Path(src).parent / "temp.xlsx"
 
 	def write_workbook(self, package_info):
-		package_info: InboundPackageInfo
+		package_info: PackageInfo
 		self.ws.sheet_view.showGridLines = False
 		self.ws["B1"] = package_info.case_number
 		self.ws["B1"].font = Font(size=14, italic=True)

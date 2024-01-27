@@ -7,14 +7,15 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import usaddress
-from sap_manager import InboundPackageInfo
 from selenium.webdriver.common.action_chains import ActionChains
 from datetime import datetime
 from selenium.webdriver.support.ui import Select
+from package_info import PackageInfo
 
 
 def login(driver):
     url = r"https://login.salesforce.com/"
+    driver.get(url)
     credentials = json.loads(open(r"keys\salesforce.json").read())
     WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='username']"))).send_keys(
@@ -418,7 +419,7 @@ def send_confirmation_email(driver, case_number):
 
 def search_case(driver, case_number):
     driver.get(
-        f"https://autelroboticsusa.my.salesforce.com/_ui/search/ui/UnifiedSearchResults?str={case_number}#!/fen=500&initialViewMode=detail&str={case_number.get()}")
+        f"https://autelroboticsusa.my.salesforce.com/_ui/search/ui/UnifiedSearchResults?str={case_number}#!/fen=500&initialViewMode=detail&str={case_number}")
     case_id = execute_on_web_element(driver, "(//div[@class='pbBody']//tr)[2]//th//a",
                                      lambda f: f.get_attribute("data-seclki"))
     driver.get(f"https://autelroboticsusa.lightning.force.com/lightning/r/Case/{case_id}/view")
@@ -476,7 +477,7 @@ def extract_case_info(driver, case_number):
     except Exception:
         pass
 
-    package_info = InboundPackageInfo(
+    package_info = PackageInfo(
         case_number=case_number,
         first_name=first_name,
         last_name=last_name,

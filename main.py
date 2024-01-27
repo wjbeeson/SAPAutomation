@@ -1,6 +1,2 @@
-from inbound_package_form import InboundPackageForm
-
-InboundPackageForm()
-
-
-#pass
+from receive_form import ReceiveForm
+form = ReceiveForm()
