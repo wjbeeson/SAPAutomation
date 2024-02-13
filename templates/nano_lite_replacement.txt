@@ -2,7 +2,7 @@ Hello {name},
 
 This email is regarding Case Number {case_number}.
 
-The repair center has looked at your drone. After careful consideration, they have determined that the repair cost would be more than the value of the drone. We understand this is not the news you wanted, so we would like to offer you a discount on a new open-box drone. 
+The repair center has looked at your drone. After careful consideration, they have determined that the repair cost would be more than the value of the drone. We understand this is not the news you wanted, so we would like to offer you a discount on a new open-box drone.
 
 The options we have are as follows:
 

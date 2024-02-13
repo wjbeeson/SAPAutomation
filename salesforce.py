@@ -11,6 +11,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from datetime import datetime
 from selenium.webdriver.support.ui import Select
 from package_info import PackageInfo
+import sku_def_class
 
 
 def login(driver):
@@ -314,27 +315,18 @@ def generate_payment_link(driver, case_number, material_sku, price):
     driver.find_element(By.TAG_NAME, 'html').send_keys(Keys.END)
     time.sleep(5)
 
-    # Get Payment Name
-    WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located(
-            (By.XPATH, f"//img[@src='https://autelroboticsusa.my.salesforce.com/img/icon/t4v35/custom/"
-                       f"custom48_120.png']/../../../../../../../../../div")))
-    split = driver.find_elements(By.XPATH,
-                                 f"//img[@src='https://autelroboticsusa.my.salesforce.com/img/icon"
-                                 f"/t4v35/custom/"
-                                 f"custom48_120.png']/../../../../../../../../../div")[0].text.split(
-        " ")
-    payment_name = ""
-    for text in split:
-        if datetime.today().strftime('%Y-%m-%d') in text:
-            payment_name = text
+    # Get Link
+    payment_page_url = (driver.find_elements(By.XPATH, f'//img[@src="https://autelroboticsusa.my.salesforce.com/img/'
+                                                       f'icon/t4v35/custom/custom48_120.png"]/../../../../../../../../'
+                                                       f'../../../lst-related-list-view-manager/lst-common-list-internal'
+                                                       f'/div/div/lst-primary-display-manager/div/lst-primary-display/'
+                                                       f'lst-primary-display-card/lst-customized-template-list/div/'
+                                                       f'lst-template-list-item-factory/lst-related-preview-card/article'
+                                                       f'/div/div/h3/lst-template-list-field/lst-output-lookup/'
+                                                       f'force-lookup/div/records-hoverable-link/div/a')[0]
+                        .get_attribute("Href"))
 
-    # Get Payment URL
-    WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.XPATH, f"//span[.='{payment_name}']/../../../../a")))
-    payment_page_url = (driver.find_elements(By.XPATH, f"//span[.='{payment_name}']/../../../../a")[0]
-                        .get_attribute("href"))
-
+    pass
     driver.get(payment_page_url)
     WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.XPATH, f"//span[.='Payment Link']/../../../div/div[@class='slds-"
@@ -346,17 +338,23 @@ def generate_payment_link(driver, case_number, material_sku, price):
                                 f"lightning-formatted-text//a")[0].get_attribute("href")
 
 
-def send_nano_lite_replacement_email(driver, case_number):
-    nano = generate_payment_link(driver, case_number, "102000750", 400)
-    lite = generate_payment_link(driver, case_number, "102000722", 800)
-    search_case(driver, case_number)
-    links = f"EVO Nano+ Premium Bundle [$400.00, Normally $719.00]: {nano}\n"
-    links = links + f"EVO Lite+ Premium Bundle [$800.00, Normally $999.00]: {lite}"
+def send_nano_lite_replacement_email(driver, case_number, sku_prices, has_care):
+    sku_def_dict = {}
+    sku_def_dict["102000750"] = sku_def_class.SkuDef("102000750", "EVO Nano+ Premium Bundle", 719)
+    sku_def_dict["102000722"] = sku_def_class.SkuDef("102000750", "EVO Lite+ Premium Bundle", 999)
+    links = ""
+    for sku in list(sku_prices.keys()):
+        link = generate_payment_link(driver, case_number, sku, sku_prices[sku])
+        sku_def: sku_def_class = sku_def_dict[sku]
+        links = links + f"{sku_def.name} [${sku_prices[sku]}, Normally ${sku_def.standard_price}]: {link}\n"
 
     package_info = extract_case_info(driver, case_number)
-    driver.get(f"https://autelroboticsusa.my.salesforce.com/_ui/core/email/author/EmailAuthor")
 
-    with open('templates/confirmation_email.txt', 'r') as file:
+    driver.get(f"https://autelroboticsusa.my.salesforce.com/_ui/core/email/author/EmailAuthor")
+    template = 'templates/nano_lite_replacement.txt'
+    if has_care:
+        template = 'templates/autel_care_replacement.txt'
+    with open(template, 'r') as file:
         body = file.read()
         body = body.replace("{name}", package_info.first_name + " " + package_info.last_name)
         body = body.replace("{case_number}", package_info.case_number)
@@ -373,16 +371,16 @@ def send_nano_lite_replacement_email(driver, case_number):
     execute_on_web_element(driver, "//textarea[@id='p7']", lambda f: f.send_keys(body), 0)
 
     # Email
-    execute_on_web_element(driver, "//textarea[@id='p24']", lambda f: f.send_keys(package_info.email), 0)
+    execute_on_web_element(driver, "//textarea[@id='p24']", lambda f: f.send_keys(package_info.account_name), 0)
 
     # Related To
     Select(execute_on_web_element(driver, "//select[@id='p3_mlktp']", lambda f: f)).select_by_index(15)
 
     # Case Number
     execute_on_web_element(driver, "//input[@id='p3']", lambda f: f.send_keys(case_number), 0)
-
+    pass
     # Click the send button
-    execute_on_web_element(driver, "//input[@title='Send']", lambda f: f.click(), 0)
+    #execute_on_web_element(driver, "//input[@title='Send']", lambda f: f.click(), 0)
 
 
 def send_confirmation_email(driver, case_number):
@@ -405,7 +403,7 @@ def send_confirmation_email(driver, case_number):
     execute_on_web_element(driver, "//textarea[@id='p7']", lambda f: f.send_keys(body), 0)
 
     # Email
-    execute_on_web_element(driver, "//textarea[@id='p24']", lambda f: f.send_keys(package_info.email), 0)
+    execute_on_web_element(driver, "//textarea[@id='p24']", lambda f: f.send_keys(package_info.account_name), 0)
 
     # Related To
     Select(execute_on_web_element(driver, "//select[@id='p3_mlktp']", lambda f: f)).select_by_index(15)
@@ -440,11 +438,11 @@ def extract_case_info(driver, case_number):
     city = ""
     state = ""
     zipcode = ""
-    email = ""
+    account_name = ""
     try:
         case_number = driver.find_elements(By.XPATH, "(//records-record-layout-item[@field-label="
                                                      "'Case Number']//div//div//div)[2]")[0].text
-        email = driver.find_elements(By.XPATH, "(//span[.='Account Name']/../..//div)[2]//a//span")[0].text
+        account_name = driver.find_elements(By.XPATH, "//button[@title='Edit Account Name']/..//span//a//span")[0].text
         name = driver.find_elements(By.XPATH,
                                     "//records-record-layout-item[@field-label='Received "
                                     "by']//div//div//div[@class='slds-form-element__control']["
@@ -486,6 +484,6 @@ def extract_case_info(driver, case_number):
         city=city,
         state=state,
         zipcode=zipcode,
-        email=email
+        account_name=account_name
     )
     return package_info

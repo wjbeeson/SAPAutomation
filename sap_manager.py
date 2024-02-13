@@ -151,6 +151,8 @@ class SapManager:
                 time.sleep(3)
                 send_keys(multiply_symbol("{DOWN}", 20))
                 send_keys("^c")
+                send_keys("^c")
+                send_keys("^c")
                 clipboard_values = Tk().clipboard_get()
                 zt01_number = clipboard_values.split("\t")[len(clipboard_values.split("\t")) - 2]
                 send_keys("{ESC}")

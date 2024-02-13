@@ -1,0 +1,14 @@
+Hello {name},
+
+This email is regarding Case Number {case_number}.
+
+The repair center has looked at your drone. After careful consideration, they have determined that the repair cost would be more than the value of the drone. Since you have Autel Care, you are eligible for a discounted price on a new drone.
+
+{links}
+
+Thank you for your patience and understanding.
+
+If you have any further questions, reply directly to this email. I'd be happy to assist.
+
+Best Regards,
+After-sales Technical Support

@@ -1,7 +1,7 @@
 class PackageInfo:
     def __init__(self, first_name=None, last_name=None, street=None, house_number=None, city=None, state=None,
                  zipcode=None, case_number=None, product_sku=None, box_name=None, date_received=None, zt01_number=None,
-                 vl01n_number=None, notes=None, email=None):
+                 vl01n_number=None, notes=None, account_name=None):
         self.first_name = first_name
         self.last_name = last_name
         self.street = street
@@ -16,4 +16,4 @@ class PackageInfo:
         self.zt01_number = zt01_number
         self.vl01n_number = vl01n_number
         self.notes = notes
-        self.email = email
+        self.account_name = account_name

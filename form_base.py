@@ -26,6 +26,7 @@ class FormBase:
         self.vl01n_number = None
         self.notes = None
         self.error_text = None
+        self.account_name = None
 
     def form_search_case(self):
         package_info: PackageInfo = salesforce.extract_case_info(self.driver, self.case_number.get())
@@ -38,10 +39,6 @@ class FormBase:
 
     def open_receive_form(self):
         utilities.switch_to_form(self, "RECEIVE")
-
-
-
-
 
     def get_package_info(self):
         def get_form_element(element):
@@ -75,7 +72,8 @@ class FormBase:
             product_sku=get_form_element(self.product_sku),
             zt01_number=get_form_element(self.zt01_number),
             vl01n_number=get_form_element(self.vl01n_number),
-            notes=get_form_element(self.notes).lower()
+            notes=get_form_element(self.notes).lower(),
+            account_name=get_form_element(self.account_name).title()
         )
         return package_info
 
@@ -104,5 +102,6 @@ class FormBase:
         set_form_element(self.zt01_number, package_info.zt01_number)
         set_form_element(self.vl01n_number, package_info.vl01n_number)
         set_form_element(self.notes, package_info.notes)
+        set_form_element(self.account_name, package_info.account_name)
 
 

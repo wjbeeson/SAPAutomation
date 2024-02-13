@@ -4,32 +4,22 @@ from inbound_form_printer import InboundFormPrinter
 from inbound_label_printer import InboundLabelPrinter
 from salesforce import *
 from sap_manager import SapManager
-from form_parts import add_menu_bar
-from form_base import FormBase
+import form_parts
+import form_base
+import utilities
 
 
-class ReceiveForm(FormBase):
+class ReceiveForm(form_base.FormBase):
+
     def __init__(self, driver=None, sap_manager=None, package_info: PackageInfo = PackageInfo()):
         super().__init__()
-        self.driver = driver
-        self.sap_manager = sap_manager
-        if sap_manager is None:
-            sap_manager = SapManager()
-            sap_manager.login()
-            self.sap_manager = sap_manager
-
-        if driver is None:
-            # Start Driver
-            chrome_options = Options()
-            chrome_options.add_argument("--disable-notifications")
-            # chrome_options.add_argument('--headless=new')
-            self.driver = webdriver.Chrome(options=chrome_options)
-            login(self.driver)
+        self.color = "Brown"
+        utilities.start_externals(self, driver, sap_manager)
 
         self.base = Tk()
         self.base.geometry('500x500')
         self.base.title("Receive Form")
-        current_row = add_menu_bar(self, 0)
+        current_row = form_parts.add_menu_bar(self, 0)
         current_row += 1
 
         # Product Information
@@ -101,7 +91,7 @@ class ReceiveForm(FormBase):
         current_row += 3
 
         # Receive Package
-        Button(self.base, text='Receive Package', bg='brown', fg='white', command=self.receive_package).grid(
+        Button(self.base, text='Receive Package', bg=self.color, fg='white', command=self.receive_package).grid(
             row=current_row,
             column=0,
             columnspan=4,
@@ -119,26 +109,28 @@ class ReceiveForm(FormBase):
         self.vl01n_number.grid(row=current_row, column=1)
         current_row += 1
 
-        Button(self.base, text='Print Form', bg='brown', fg='white', command=self.print_form).grid(row=current_row,
-                                                                                                   column=0,
-                                                                                                   columnspan=3,
-                                                                                                   sticky=W + E)
+        Button(self.base, text='Print Form', bg=self.color, fg='white', command=self.print_form).grid(row=current_row,
+                                                                                                      column=0,
+                                                                                                      columnspan=3,
+                                                                                                      sticky=W + E)
 
-        Button(self.base, text='Clear', bg='white', fg='brown', command=self.reset_form).grid(row=current_row, column=3,
-                                                                                              rowspan=2, sticky=W + E + S + N)
+        Button(self.base, text='Clear', bg='white', fg=self.color, command=self.reset_form).grid(row=current_row,
+                                                                                                 column=3,
+                                                                                                 rowspan=2,
+                                                                                                 sticky=W + E + S + N)
         current_row += 1
 
-        Button(self.base, text='Print Label', bg='brown', fg='white', command=self.print_label).grid(row=current_row,
-                                                                                                     column=0,
-                                                                                                     columnspan=3,
-                                                                                                     sticky=W + E)
+        Button(self.base, text='Print Label', bg=self.color, fg='white', command=self.print_label).grid(row=current_row,
+                                                                                                        column=0,
+                                                                                                        columnspan=3,
+                                                                                                        sticky=W + E)
         current_row += 1
 
         self.error_text = Label(self.base, text=f"", font=("bold", 10), foreground="red")
         current_row += 1
 
         self.error_text.grid(row=current_row, column=0, columnspan=4, sticky=W + E)
-        # it will be used for displaying the registration form onto the window
+
         self.set_package_info(package_info)
         self.base.mainloop()
 
