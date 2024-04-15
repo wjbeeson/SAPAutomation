@@ -10,11 +10,9 @@ from pywinauto_recorder.player import *
 import usaddress
 
 
-
-
-
 def multiply_symbol(symbol, number):
     final_symbol = ""
+
     for i in range(number):
         final_symbol += symbol
     return final_symbol
@@ -150,6 +148,13 @@ class SapManager:
                 send_keys(multiply_symbol("{ENTER}", 1))
                 time.sleep(3)
                 send_keys(multiply_symbol("{DOWN}", 20))
+                send_keys("^c")
+                send_keys("^c")
+                send_keys("^c")
+                send_keys("^c")
+                send_keys("^c")
+                time.sleep(2)
+                send_keys("^c")
                 send_keys("^c")
                 send_keys("^c")
                 send_keys("^c")

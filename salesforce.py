@@ -454,7 +454,8 @@ def extract_case_info(driver, case_number):
         address = driver.find_elements(
             By.XPATH, "//records-record-layout-item["
                       "@field-label='Address info']//div//div//div["
-                      "@class='slds-form-element__control']["
+                      "@class='slds-form-eleme"
+                      "nt__control']["
                       "span]//slot["
                       "@name='outputField']//lightning-formatted-text")[0].text
         address = usaddress.tag(address)[0]
@@ -465,7 +466,8 @@ def extract_case_info(driver, case_number):
                   f'{address.get("StreetName", "")} '
                   f'{address.get("StreetNamePostDirectional", "")} '
                   f'{address.get("StreetNamePostModifier", "")} '
-                  f'{address.get("StreetNamePostType", "")}'
+                  f'{address.get("StreetNamePostType", "")} '
+                  f'{address.get("OccupancyIdentifier", "")}'
                   )
         street = ' '.join(street.split())
         city = address.get("PlaceName", "")

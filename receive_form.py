@@ -137,9 +137,9 @@ class ReceiveForm(form_base.FormBase):
     def reset_form(self):
         self.case_number.delete(0, END)
         self.product_sku.delete(0, END)
-        time = datetime.now().strftime("%m/%d")
-        self.date_received.delete(0, END)
-        self.date_received.insert(0, time)
+        # time = datetime.now().strftime("%m/%d")
+        # self.date_received.delete(0, END)
+        # self.date_received.insert(0, time)
         self.first_name.delete(0, END)
         self.last_name.delete(0, END)
         self.box_name.delete(0, END)
@@ -176,9 +176,6 @@ class ReceiveForm(form_base.FormBase):
         if not self.validate_form(package_info):
             return
 
-        # Print Label
-        self.print_label()
-        time.sleep(4)
         # Generate zt01 Number
         self.sap_manager.log_zt01_number(package_info)
 
@@ -197,6 +194,10 @@ class ReceiveForm(form_base.FormBase):
 
         # Print Form
         self.print_form()
+
+        # Print Label
+        self.print_label()
+
         self.send_email()
 
     def format_form(self):
