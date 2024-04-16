@@ -116,11 +116,17 @@ class ReceiveForm(form_base.FormBase):
 
         Button(self.base, text='Clear', bg='white', fg=self.color, command=self.reset_form).grid(row=current_row,
                                                                                                  column=3,
-                                                                                                 rowspan=2,
+                                                                                                 rowspan=3,
                                                                                                  sticky=W + E + S + N)
         current_row += 1
 
         Button(self.base, text='Print Label', bg=self.color, fg='white', command=self.print_label).grid(row=current_row,
+                                                                                                        column=0,
+                                                                                                        columnspan=3,
+                                                                                                        sticky=W + E)
+        current_row += 1
+
+        Button(self.base, text='Send Email', bg=self.color, fg='white', command=self.send_email).grid(row=current_row,
                                                                                                         column=0,
                                                                                                         columnspan=3,
                                                                                                         sticky=W + E)

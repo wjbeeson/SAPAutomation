@@ -387,7 +387,7 @@ def send_confirmation_email(driver, case_number):
     package_info = extract_case_info(driver, case_number)
     driver.get(f"https://autelroboticsusa.my.salesforce.com/_ui/core/email/author/EmailAuthor")
 
-    with open('templates/confirmation_email.txt', 'r') as file:
+    with open('assets/confirmation_email.txt', 'r') as file:
         body = file.read()
         body = body.replace("{name}", package_info.first_name + " " + package_info.last_name)
         body = body.replace("{case_number}", package_info.case_number)
