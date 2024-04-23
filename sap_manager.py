@@ -2,13 +2,12 @@ import json
 import subprocess
 import time
 from datetime import date
-from tkinter import Tk
+import win32clipboard
 import win32com.client
 import win32com.client
-import win32gui
 from pywinauto import Application
 from pywinauto_recorder.player import *
-import win32con
+
 
 def multiply_symbol(symbol, number):
     final_symbol = ""
@@ -17,15 +16,6 @@ def multiply_symbol(symbol, number):
         final_symbol += symbol
     return final_symbol
 
-# This is needed because otherwise Tkinter opens up a bunch of empty windows while running. I believe it's because I
-# call "TK()" too many times in my code. It's super hacky but it works.
-def close_excess_windows():
-    while True:
-        handle = win32gui.FindWindow(None, r'tk')
-        if handle != 0:
-            win32gui.PostMessage(handle, win32con.WM_CLOSE, 0, 0)
-        else:
-            break
 
 # This is a class that manages the SAP GUI. It's a bit of a mess because I had to use a lot of trial and error to get
 # the pywinauto_recorder to work reliably. None of this would be necessary if I could just use the SAP GUI scripting,
@@ -171,17 +161,13 @@ class SapManager:
 
                 # For some reason, the clipboard doesn't always get the value the first time, so I got mad and just
                 # started spamming the clipboard with the value until it finally worked.
+                time.sleep(1)
                 send_keys("^c")
                 send_keys("^c")
                 send_keys("^c")
-                send_keys("^c")
-                send_keys("^c")
-                time.sleep(2)
-                send_keys("^c")
-                send_keys("^c")
-                send_keys("^c")
-                send_keys("^c")
-                clipboard_values = Tk().clipboard_get()
+                win32clipboard.OpenClipboard()
+                clipboard_values = win32clipboard.GetClipboardData()
+                win32clipboard.CloseClipboard()
                 zt01_number = clipboard_values.split("\t")[len(clipboard_values.split("\t")) - 2]
                 send_keys("{ESC}")
                 time.sleep(2)
@@ -232,7 +218,9 @@ class SapManager:
                 time.sleep(2)
                 send_keys("{DOWN}")
                 send_keys("^c")
-                clipboard_values = Tk().clipboard_get()
+                win32clipboard.OpenClipboard()
+                clipboard_values = win32clipboard.GetClipboardData()
+                win32clipboard.CloseClipboard()
                 vl01_number = clipboard_values.split(" ")[2]
                 send_keys("{F3}")
                 time.sleep(1)
@@ -240,5 +228,4 @@ class SapManager:
                 time.sleep(1)
                 send_keys("{F3}")
                 time.sleep(1)
-                close_excess_windows()
                 return vl01_number

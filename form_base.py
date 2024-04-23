@@ -1,8 +1,5 @@
-import salesforce
 from tkinter import *
-from package_info import PackageInfo
 import salesforce
-import utilities
 from salesforce import *
 
 
@@ -34,18 +31,13 @@ class FormBase:
         package_info: PackageInfo = self.get_package_info()
         self.set_package_info(package_info)
 
-    def open_repair_form(self):
-        utilities.switch_to_form(self, "REPAIR")
-
-    def open_receive_form(self):
-        utilities.switch_to_form(self, "RECEIVE")
-
     def get_package_info(self):
         def get_form_element(element):
             try:
                 return element.get()
             except Exception:
                 return ""
+
         case_number = get_form_element(self.case_number)
         if len(case_number) != 8:
             preceding_zeros = ""
@@ -77,7 +69,6 @@ class FormBase:
         )
         return package_info
 
-
     def set_package_info(self, package_info: PackageInfo):
         def set_form_element(element, value):
             try:
@@ -103,5 +94,3 @@ class FormBase:
         set_form_element(self.vl01n_number, package_info.vl01n_number)
         set_form_element(self.notes, package_info.notes)
         set_form_element(self.account_name, package_info.account_name)
-
-

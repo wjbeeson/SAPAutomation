@@ -1,12 +1,11 @@
 from tkinter import *
-from package_info import PackageInfo
+
+import form_base
+import form_parts
+import utilities
 from inbound_form_printer import InboundFormPrinter
 from inbound_label_printer import InboundLabelPrinter
 from salesforce import *
-from sap_manager import SapManager
-import form_parts
-import form_base
-import utilities
 
 
 class ReceiveForm(form_base.FormBase):
@@ -127,9 +126,9 @@ class ReceiveForm(form_base.FormBase):
         current_row += 1
 
         Button(self.base, text='Send Email', bg=self.color, fg='white', command=self.send_email).grid(row=current_row,
-                                                                                                        column=0,
-                                                                                                        columnspan=3,
-                                                                                                        sticky=W + E)
+                                                                                                      column=0,
+                                                                                                      columnspan=3,
+                                                                                                      sticky=W + E)
         current_row += 1
 
         self.error_text = Label(self.base, text=f"", font=("bold", 10), foreground="red")
@@ -189,6 +188,8 @@ class ReceiveForm(form_base.FormBase):
         zt01_number = self.sap_manager.record_zt01_number(package_info.case_number)
         self.zt01_number.delete(0, END)
         self.zt01_number.insert(0, zt01_number)
+        self.base.update_idletasks()
+        self.base.update()
 
         # Generate vl01n Number
         self.sap_manager.log_vl01n_number(zt01_number)
@@ -197,6 +198,8 @@ class ReceiveForm(form_base.FormBase):
         vl01n_number = self.sap_manager.record_vl01n_number(zt01_number)
         self.vl01n_number.delete(0, END)
         self.vl01n_number.insert(0, vl01n_number)
+        self.base.update_idletasks()
+        self.base.update()
 
         # Print Form
         self.print_form()
